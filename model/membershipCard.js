@@ -4,6 +4,7 @@ const membershipCardSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true },
     mobile: { type: String,  },
+    amount: { type: String, required: true },
     order_Id: { type: String, required: true },
     payment_Id: {
         type: String,
