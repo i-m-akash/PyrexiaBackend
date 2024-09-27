@@ -13,7 +13,8 @@ const sendEmail = require("./utils/sendEmail");
 const Payment = require("./model/paymentModel");
 const BasicRegistration = require("./model/basicRegistration");
 const MembershipCard = require("./model/membershipCard");
-
+const fs = require('fs');
+const PDFDocument = require('pdfkit');
 
 const PORT = process.env.PORT || 8080;
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
@@ -22,11 +23,198 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 app.use(cors({
   origin: `${BASE_URL}`,
   methods: "GET,POST,PUT,DELETE",
-  
+
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/auth/', authRoutes);
+
+
+
+function generateBasicPDF(userData) {
+  const doc = new PDFDocument();
+  const filePath = `./receipt-${userData.email}.pdf`;
+
+  doc.pipe(fs.createWriteStream(filePath));
+
+  // Header styling
+  doc.fontSize(25)
+    .font('Helvetica-Bold') // Bold font
+    .fillColor('#003366') // Blue color
+    .text('Payment Receipt', {
+      align: 'center',
+      underline: true
+    });
+
+  doc.moveDown(2); // Adds vertical spacing
+
+  // User Data section with styling
+  doc.fontSize(12)
+    .font('Helvetica') // Regular font
+    .fillColor('#000') // Reset to black text color
+    .text(`Name: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.name}`); // Bold for user data
+
+  doc.font('Helvetica')
+    .text(`Email: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.email}`);
+
+  doc.font('Helvetica')
+    .text(`Phone: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.mobile}`);
+
+  doc.font('Helvetica')
+    .text(`Tickets Purchased: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.tickets}`);
+
+  doc.font('Helvetica')
+    .text(`Amount Paid: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.amount}`);
+
+  doc.font('Helvetica')
+    .text(`Payment_Id: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.payment_Id}`);
+
+  // Footer section
+  doc.moveDown(2);
+  doc.fontSize(10)
+    .font('Helvetica')
+    .fillColor('#555') // Lighter color for footer
+    .text('Thank you for your purchase!', {
+      align: 'center'
+    });
+
+  doc.end();
+
+  return filePath;
+}
+
+function generateMembershipPDF(userData) {
+  const doc = new PDFDocument();
+  const filePath = `./receipt-${userData.email}.pdf`;
+
+  doc.pipe(fs.createWriteStream(filePath));
+
+  // Header styling
+  doc.fontSize(25)
+    .font('Helvetica-Bold') // Bold font
+    .fillColor('#003366') // Blue color
+    .text('Payment Receipt', {
+      align: 'center',
+      underline: true
+    });
+
+  doc.moveDown(2); // Adds vertical spacing
+
+  // User Data section with styling
+  doc.fontSize(12)
+    .font('Helvetica') // Regular font
+    .fillColor('#000') // Reset to black text color
+    .text(`Name: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.name}`); // Bold for user data
+
+  doc.font('Helvetica')
+    .text(`Email: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.email}`);
+
+  doc.font('Helvetica')
+    .text(`Phone: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.mobile}`);
+
+
+  doc.font('Helvetica')
+    .text(`Amount Paid: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.amount}`);
+
+  doc.font('Helvetica')
+    .text(`Payment_Id: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.payment_Id}`);
+
+  // Footer section
+  doc.moveDown(2);
+  doc.fontSize(10)
+    .font('Helvetica')
+    .fillColor('#555') // Lighter color for footer
+    .text('Thank you for your purchase!', {
+      align: 'center'
+    });
+
+  doc.end();
+
+  return filePath;
+}
+
+function generateEventPDF(userData) {
+  const doc = new PDFDocument();
+  const filePath = `./receipt-${userData.teamLeaderEmail}.pdf`;
+
+  doc.pipe(fs.createWriteStream(filePath));
+
+  // Header styling
+  doc.fontSize(25)
+    .font('Helvetica-Bold') // Bold font
+    .fillColor('#003366') // Blue color
+    .text('Payment Receipt', {
+      align: 'center',
+      underline: true
+    });
+
+  doc.moveDown(2); // Adds vertical spacing
+
+  // User Data section with styling
+  doc.fontSize(12)
+    .font('Helvetica') // Regular font
+    .fillColor('#000') // Reset to black text color
+    .text(`Name: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.teamLeaderName}`); // Bold for user data
+
+  doc.font('Helvetica')
+    .text(`Email: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.teamLeaderEmail}`);
+
+  doc.font('Helvetica')
+    .text(`Phone: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.teamLeaderMobileNo}`);
+
+
+  doc.font('Helvetica')
+    .text(`Amount Paid: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.amount}`);
+
+  doc.font('Helvetica')
+    .text(`Payment_Id: `, { continued: true })
+    .font('Helvetica-Bold')
+    .text(`${userData.payment_Id}`);
+
+  // Footer section
+  doc.moveDown(2);
+  doc.fontSize(10)
+    .font('Helvetica')
+    .fillColor('#555') // Lighter color for footer
+    .text('Thank you for your purchase!', {
+      align: 'center'
+    });
+
+  doc.end();
+
+  return filePath;
+}
+
 
 //Payment Route
 const instance = new Razorpay({
@@ -94,18 +282,20 @@ const paymentVerification = async (req, res) => {
 
 const basicpaymentVerification = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, name, email, mobile, tickets } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, name, email, mobile, tickets, amount } = req.body;
 
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
 
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_API_SECRET)
-      .update(body.toString())
-      .digest("hex");
+    var {
+      validatePaymentVerification,
+      validateWebhookSignature,
+    } = require("./node_modules/razorpay/dist/utils/razorpay-utils");
 
-    const isAuthentic = expectedSignature === razorpay_signature;
-
-    if (isAuthentic) {
+    if (
+      validatePaymentVerification(
+        { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
+        razorpay_signature,
+        process.env.RAZORPAY_API_SECRET
+      )) {
       try {
         // Save registration with payment details
         const registrationData = {
@@ -113,6 +303,7 @@ const basicpaymentVerification = async (req, res) => {
           email,
           mobile,
           tickets,
+          amount,
           payment_Id: razorpay_payment_id,
           order_Id: razorpay_order_id,
           signature: razorpay_signature,
@@ -124,13 +315,30 @@ const basicpaymentVerification = async (req, res) => {
         const send_to = email;
         const sent_from = process.env.EMAIL_USER;
         const reply_to = email;
-        const subject = "Basic Registration Ticket Confirmation";
+        const subject = " PYREXIA 2024 Basic Registration Confirmation";
         const message = `
-            Thank you for registering. Your payment is successful. You have purchased ${tickets} tickets. Your Payment Id is ${razorpay_payment_id}.
-          `;
+        <p> Dear ${name},</p>
+        
+          <p> We are excited to confirm your basic registration for PYREXIA 2024, which will take place from October 10th to October 14th, 2024, at AIIMS Rishikesh. Thank you for being a part of this vibrant event!</p>
+        
+        <p> PYREXIA promises to be an exciting celebration of culture, talent, and academic excellence, and we’re thrilled to have you join us. In the coming days, you will receive more details regarding the event schedule, activities, and participation guidelines.</p>
+        
+       <p> Please find the e-bill attached for your reference. Should you have any questions or need further assistance, don’t hesitate to reach out.</p>
+        
+       <p> Once again, thank you for your registration. We look forward to welcoming you at PYREXIA 2024!</p>
+        
+       <p> Best regards,</p>
+       <p> Team PYREXIA </p>
+        `;
+
+
+        const pdfPath = generateBasicPDF(registrationData);
 
         try {
-          await sendEmail(subject, message, send_to, sent_from, reply_to);
+          await sendEmail(subject, message, send_to, sent_from, reply_to, pdfPath);
+          if (fs.existsSync(pdfPath)) {
+            fs.unlinkSync(pdfPath);
+          }
           return res.status(200).json({
             success: true,
             message: "Payment verified and registration saved. A confirmation email has been sent.",
@@ -167,24 +375,26 @@ const basicpaymentVerification = async (req, res) => {
 
 const membershipCardPaymentVerification = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, name, email, mobile } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, name, email, mobile } = req.body;
 
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    var {
+      validatePaymentVerification,
+      validateWebhookSignature,
+    } = require("./node_modules/razorpay/dist/utils/razorpay-utils");
 
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_API_SECRET)
-      .update(body.toString())
-      .digest("hex");
-
-    const isAuthentic = expectedSignature === razorpay_signature;
-
-    if (isAuthentic) {
+    if (
+      validatePaymentVerification(
+        { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
+        razorpay_signature,
+        process.env.RAZORPAY_API_SECRET
+      )) {
       try {
         // Save registration with payment details
         const registrationData = {
           name,
           email,
           mobile,
+          amount,
           payment_Id: razorpay_payment_id,
           order_Id: razorpay_order_id,
           signature: razorpay_signature,
@@ -196,17 +406,34 @@ const membershipCardPaymentVerification = async (req, res) => {
         const send_to = email;
         const sent_from = process.env.EMAIL_USER;
         const reply_to = email;
-        const subject = "Membership Card Ticket Confirmation";
+        const subject = " PYREXIA 2024 Membership Card Confirmation";
         const message = `
-            Thank you for registering. Your payment is successful.Your Payment Id is ${razorpay_payment_id}.
-          `;
+        <p>Dear ${name},</p>
+        
+         <p>We are excited to confirm your registration for  Membership Card of PYREXIA 2024, which will take place from October 10th to October 14th, 2024, at AIIMS Rishikesh. Thank you for being a part of this vibrant event!</p>
+        
+         <p>PYREXIA promises to be an exciting celebration of culture, talent, and academic excellence, and we’re thrilled to have you join us. In the coming days, you will receive more details regarding the event schedule, activities, and participation guidelines.</p>
+        
+         <p>Please find the e-bill attached for your reference. Should you have any questions or need further assistance, don’t hesitate to reach out.</p>
+        
+         <p>Once again, thank you for your registration. We look forward to welcoming you at PYREXIA 2024!</p>
+        
+         <p>Best regards,</p>
+         <p>Team PYREXIA</p>
+        `;
+
+
+        const pdfPath = generateMembershipPDF(registrationData);
+
 
         try {
-          await sendEmail(subject, message, send_to, sent_from, reply_to);
+          await sendEmail(subject, message, send_to, sent_from, reply_to, pdfPath);
+          fs.unlinkSync(pdfPath);
           return res.status(200).json({
             success: true,
             message: "Payment verified and registration saved. A confirmation email has been sent.",
           });
+
         } catch (error) {
           console.error("Error sending confirmation email:", error);
           return res.status(500).json({
@@ -239,44 +466,63 @@ const membershipCardPaymentVerification = async (req, res) => {
 
 const eventpaymentVerification = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, email, eventName } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, email, eventName, amount } = req.body;
 
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    var {
+      validatePaymentVerification,
+      validateWebhookSignature,
+    } = require("./node_modules/razorpay/dist/utils/razorpay-utils");
 
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_API_SECRET)
-      .update(body.toString())
-      .digest("hex");
-
-    const isAuthentic = expectedSignature === razorpay_signature;
-
-    if (isAuthentic) {
+    if (
+      validatePaymentVerification(
+        { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
+        razorpay_signature,
+        process.env.RAZORPAY_API_SECRET
+      )) {
       try {
-        const registration = await EventRegistration.findOne({teamLeaderEmail:email, eventName});
-       
+        const registration = await EventRegistration.findOne({ teamLeaderEmail: email, eventName });
+
 
         if (!registration) {
           return res.status(404).json({ error: 'Registration not found' });
         }
 
         registration.Paid = true;
+        registration.amount = amount;
         registration.payment_Id = razorpay_payment_id;
         registration.order_Id = razorpay_order_id;
         registration.signature = razorpay_signature;
 
         await registration.save();
+        console.log(registration);
 
 
         const send_to = email;
         const sent_from = process.env.EMAIL_USER;
         const reply_to = email;
-        const subject = `${eventName} Registraion Confirmation`;
+        const subject = `PYREXIA 2024 ${eventName} Confirmation`;
         const message = `
-            Thank you for registering for ${eventName}. Your payment is successful.Your Payment Id is ${razorpay_payment_id}.
-          `;
+        <p>Dear ${registration.teamLeaderName},</p>
+        
+        <p>We are excited to confirm your registration for event  ${eventName} of PYREXIA 2024, which will take place from October 10th to October 14th, 2024, at AIIMS Rishikesh. Thank you for being a part of this vibrant event!</p>
+        
+        <p>PYREXIA promises to be an exciting celebration of culture, talent, and academic excellence, and we’re thrilled to have you join us. In the coming days, you will receive more details regarding the event schedule, activities, and participation guidelines.</p>
+        
+        <p>Please find the e-bill attached for your reference. Should you have any questions or need further assistance, don’t hesitate to reach out.</p>
+        
+        <p>Once again, thank you for your registration. We look forward to welcoming you at PYREXIA 2024!</p>
+        
+       <p> Best regards,</p>
+       <p> Team PYREXIA</p>
+        `;
+
+
+        const pdfPath = generateEventPDF(registration);
+
 
         try {
-          await sendEmail(subject, message, send_to, sent_from, reply_to);
+          await sendEmail(subject, message, send_to, sent_from, reply_to, pdfPath);
+          fs.unlinkSync(pdfPath);
           return res.status(200).json({
             success: true,
             message: "Payment verified and registration saved. A confirmation email has been sent.",
@@ -361,7 +607,7 @@ app.post('/user/member-card', async (req, res) => {
     if (!registrations) {
       return res.status(404).json({ message: 'No registrations found' });
     }
-    
+
 
     res.json(registrations[0].payment_Id);
   } catch (error) {
@@ -434,12 +680,12 @@ app.post('/user/events', async (req, res) => {
 
   try {
     const cartItems = await EventRegistration.find({ teamLeaderEmail: userEmail, Paid: true });
-    
+
     if (cartItems.length === 0) {
       return res.status(404).json({ message: "No paid registrations found for this user." });
     }
 
-  
+
     res.status(200).json(cartItems);
   } catch (error) {
     console.error("Error fetching registration details:", error);
