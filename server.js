@@ -514,7 +514,7 @@ const eventpaymentVerification = async (req, res) => {
         `;
         
      
-        const pdfPath = generateEventPDF(registrationData);
+        const pdfPath = generateEventPDF(registration);
           
 
         try {
