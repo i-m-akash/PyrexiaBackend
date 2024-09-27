@@ -178,17 +178,17 @@ function generateEventPDF(userData) {
     .fillColor('#000') // Reset to black text color
     .text(`Name: `, { continued: true })
     .font('Helvetica-Bold')
-    .text(`${userData.name}`); // Bold for user data
+    .text(`${userData.teamLeaderName}`); // Bold for user data
 
   doc.font('Helvetica')
     .text(`Email: `, { continued: true })
     .font('Helvetica-Bold')
-    .text(`${userData.email}`);
+    .text(`${userData.teamLeaderEmail}`);
 
   doc.font('Helvetica')
     .text(`Phone: `, { continued: true })
     .font('Helvetica-Bold')
-    .text(`${userData.mobile}`);
+    .text(`${userData.teamLeaderMobileNo}`);
 
 
   doc.font('Helvetica')
@@ -425,7 +425,9 @@ const membershipCardPaymentVerification = async (req, res) => {
 
         try {
           await sendEmail(subject, message, send_to, sent_from, reply_to, pdfPath);
-           fs.unlinkSync(pdfPath);
+            if (fs.existsSync(pdfPath)) {
+            fs.unlinkSync(pdfPath);
+          }
           return res.status(200).json({
             success: true,
             message: "Payment verified and registration saved. A confirmation email has been sent.",
@@ -517,7 +519,9 @@ const eventpaymentVerification = async (req, res) => {
 
         try {
           await sendEmail(subject, message, send_to, sent_from, reply_to, pdfPath);
-           fs.unlinkSync(pdfPath);
+            if (fs.existsSync(pdfPath)) {
+            fs.unlinkSync(pdfPath);
+          }
           return res.status(200).json({
             success: true,
             message: "Payment verified and registration saved. A confirmation email has been sent.",
