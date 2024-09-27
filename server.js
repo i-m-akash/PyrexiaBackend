@@ -23,7 +23,7 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 app.use(cors({
   origin: `${BASE_URL}`,
   methods: "GET,POST,PUT,DELETE",
-  
+
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -157,7 +157,7 @@ function generateMembershipPDF(userData) {
 
 function generateEventPDF(userData) {
   const doc = new PDFDocument();
-  const filePath = `./receipt-${userData.email}.pdf`;
+  const filePath = `./receipt-${userData.teamLeaderEmail}.pdf`;
 
   doc.pipe(fs.createWriteStream(filePath));
 
@@ -282,18 +282,20 @@ const paymentVerification = async (req, res) => {
 
 const basicpaymentVerification = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, name, email, mobile, tickets ,amount} = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, name, email, mobile, tickets, amount } = req.body;
 
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
 
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_API_SECRET)
-      .update(body.toString())
-      .digest("hex");
+    var {
+      validatePaymentVerification,
+      validateWebhookSignature,
+    } = require("./node_modules/razorpay/dist/utils/razorpay-utils");
 
-    const isAuthentic = expectedSignature === razorpay_signature;
-
-    if (isAuthentic) {
+    if (
+      validatePaymentVerification(
+        { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
+        razorpay_signature,
+        process.env.RAZORPAY_API_SECRET
+      )) {
       try {
         // Save registration with payment details
         const registrationData = {
@@ -314,7 +316,7 @@ const basicpaymentVerification = async (req, res) => {
         const sent_from = process.env.EMAIL_USER;
         const reply_to = email;
         const subject = " PYREXIA 2024 Basic Registration Confirmation";
-        const message =  `
+        const message = `
         <p> Dear ${name},</p>
         
           <p> We are excited to confirm your basic registration for PYREXIA 2024, which will take place from October 10th to October 14th, 2024, at AIIMS Rishikesh. Thank you for being a part of this vibrant event!</p>
@@ -328,10 +330,10 @@ const basicpaymentVerification = async (req, res) => {
        <p> Best regards,</p>
        <p> Team PYREXIA </p>
         `;
-        
-     
+
+
         const pdfPath = generateBasicPDF(registrationData);
-          
+
         try {
           await sendEmail(subject, message, send_to, sent_from, reply_to, pdfPath);
           if (fs.existsSync(pdfPath)) {
@@ -373,18 +375,19 @@ const basicpaymentVerification = async (req, res) => {
 
 const membershipCardPaymentVerification = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount,name, email, mobile } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, name, email, mobile } = req.body;
 
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    var {
+      validatePaymentVerification,
+      validateWebhookSignature,
+    } = require("./node_modules/razorpay/dist/utils/razorpay-utils");
 
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_API_SECRET)
-      .update(body.toString())
-      .digest("hex");
-
-    const isAuthentic = expectedSignature === razorpay_signature;
-
-    if (isAuthentic) {
+    if (
+      validatePaymentVerification(
+        { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
+        razorpay_signature,
+        process.env.RAZORPAY_API_SECRET
+      )) {
       try {
         // Save registration with payment details
         const registrationData = {
@@ -404,7 +407,7 @@ const membershipCardPaymentVerification = async (req, res) => {
         const sent_from = process.env.EMAIL_USER;
         const reply_to = email;
         const subject = " PYREXIA 2024 Membership Card Confirmation";
-        const message =  `
+        const message = `
         <p>Dear ${name},</p>
         
          <p>We are excited to confirm your registration for  Membership Card of PYREXIA 2024, which will take place from October 10th to October 14th, 2024, at AIIMS Rishikesh. Thank you for being a part of this vibrant event!</p>
@@ -418,16 +421,14 @@ const membershipCardPaymentVerification = async (req, res) => {
          <p>Best regards,</p>
          <p>Team PYREXIA</p>
         `;
-        
-     
+
+
         const pdfPath = generateMembershipPDF(registrationData);
-          
+
 
         try {
           await sendEmail(subject, message, send_to, sent_from, reply_to, pdfPath);
-            if (fs.existsSync(pdfPath)) {
-            fs.unlinkSync(pdfPath);
-          }
+          fs.unlinkSync(pdfPath);
           return res.status(200).json({
             success: true,
             message: "Payment verified and registration saved. A confirmation email has been sent.",
@@ -465,41 +466,43 @@ const membershipCardPaymentVerification = async (req, res) => {
 
 const eventpaymentVerification = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, email, eventName,amount } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, email, eventName, amount } = req.body;
 
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    var {
+      validatePaymentVerification,
+      validateWebhookSignature,
+    } = require("./node_modules/razorpay/dist/utils/razorpay-utils");
 
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_API_SECRET)
-      .update(body.toString())
-      .digest("hex");
-
-    const isAuthentic = expectedSignature === razorpay_signature;
-
-    if (isAuthentic) {
+    if (
+      validatePaymentVerification(
+        { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
+        razorpay_signature,
+        process.env.RAZORPAY_API_SECRET
+      )) {
       try {
-        const registration = await EventRegistration.findOne({teamLeaderEmail:email, eventName});
-       
+        const registration = await EventRegistration.findOne({ teamLeaderEmail: email, eventName });
+
 
         if (!registration) {
           return res.status(404).json({ error: 'Registration not found' });
         }
 
         registration.Paid = true;
-        registration.amount=amount;
+        registration.amount = amount;
         registration.payment_Id = razorpay_payment_id;
         registration.order_Id = razorpay_order_id;
         registration.signature = razorpay_signature;
 
         await registration.save();
+        console.log(registration);
 
 
         const send_to = email;
         const sent_from = process.env.EMAIL_USER;
         const reply_to = email;
         const subject = `PYREXIA 2024 ${eventName} Confirmation`;
-        const message =  `
-        <p>Dear ${eventName},</p>
+        const message = `
+        <p>Dear ${registration.teamLeaderName},</p>
         
         <p>We are excited to confirm your registration for event  ${eventName} of PYREXIA 2024, which will take place from October 10th to October 14th, 2024, at AIIMS Rishikesh. Thank you for being a part of this vibrant event!</p>
         
@@ -512,16 +515,14 @@ const eventpaymentVerification = async (req, res) => {
        <p> Best regards,</p>
        <p> Team PYREXIA</p>
         `;
-        
-     
+
+
         const pdfPath = generateEventPDF(registration);
-          
+
 
         try {
           await sendEmail(subject, message, send_to, sent_from, reply_to, pdfPath);
-            if (fs.existsSync(pdfPath)) {
-            fs.unlinkSync(pdfPath);
-          }
+          fs.unlinkSync(pdfPath);
           return res.status(200).json({
             success: true,
             message: "Payment verified and registration saved. A confirmation email has been sent.",
@@ -606,7 +607,7 @@ app.post('/user/member-card', async (req, res) => {
     if (!registrations) {
       return res.status(404).json({ message: 'No registrations found' });
     }
-    
+
 
     res.json(registrations[0].payment_Id);
   } catch (error) {
@@ -679,12 +680,12 @@ app.post('/user/events', async (req, res) => {
 
   try {
     const cartItems = await EventRegistration.find({ teamLeaderEmail: userEmail, Paid: true });
-    
+
     if (cartItems.length === 0) {
       return res.status(404).json({ message: "No paid registrations found for this user." });
     }
 
-  
+
     res.status(200).json(cartItems);
   } catch (error) {
     console.error("Error fetching registration details:", error);
