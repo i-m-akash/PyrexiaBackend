@@ -11,6 +11,7 @@ const registrationSchema = new mongoose.Schema({
   fees: { type: String ,required: true},
   Paid: { type: Boolean, required:true ,default:false }, 
   order_Id: { type: String },
+   amount: { type: String },
   payment_Id: {
       type: String,
    
